@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_database/database_service.dart';
-import 'package:supabase_database/todo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'todo.dart';
 
 void main() async {
   await Supabase.initialize(
@@ -33,10 +34,11 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen> {
   // Properties
-  final DatabaseService databaseService = DatabaseService();
   final TextEditingController titleController = TextEditingController();
 
-  // Methods
+  final DatabaseService databaseService = DatabaseService();
+
+  // Add new todo method
   void addNewTodo() {
     showDialog(
       context: context,
@@ -44,21 +46,21 @@ class _TodoScreenState extends State<TodoScreen> {
         title: const Text("Add new todo"),
         content: TextField(controller: titleController),
         actions: [
-          // Close button
+          // Cancel button
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
               titleController.clear();
+              Navigator.pop(context);
             },
             child: const Text("Cancel"),
           ),
-          // Add button
+          // Save button
           TextButton(
             onPressed: () {
               final Todo newTodo = Todo(title: titleController.text);
               databaseService.createTodo(newTodo);
-              Navigator.pop(context);
               titleController.clear();
+              Navigator.pop(context);
             },
             child: const Text("Save"),
           ),
@@ -67,7 +69,8 @@ class _TodoScreenState extends State<TodoScreen> {
     );
   }
 
-  void deleteTodo(Todo todo) {
+  // Delete todo method
+  void deleteTodo(Todo currentTodo) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -80,10 +83,10 @@ class _TodoScreenState extends State<TodoScreen> {
             },
             child: const Text("Cancel"),
           ),
-          // Agree button
+          // Save button
           TextButton(
             onPressed: () {
-              databaseService.deleteTodo(todo);
+              databaseService.deleteTodo(currentTodo);
               Navigator.pop(context);
             },
             child: const Text("Delete"),
@@ -93,8 +96,9 @@ class _TodoScreenState extends State<TodoScreen> {
     );
   }
 
-  void updateTodo(Todo todo) {
-    titleController.text = todo.title;
+  // Update todo method
+  void updateTodo(Todo currentTodo) {
+    titleController.text = currentTodo.title;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -104,15 +108,15 @@ class _TodoScreenState extends State<TodoScreen> {
           // Cancel button
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
               titleController.clear();
+              Navigator.pop(context);
             },
             child: const Text("Cancel"),
           ),
-          // Agree button
+          // Save button
           TextButton(
             onPressed: () {
-              databaseService.updateTodo(todo, titleController.text);
+              databaseService.updateTodo(currentTodo, titleController.text);
               titleController.clear();
               Navigator.pop(context);
             },
@@ -126,22 +130,20 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Todos")),
-
-      // Add new todo button
+      appBar: AppBar(title: const Text("CRUD")),
       floatingActionButton: FloatingActionButton(
         onPressed: addNewTodo,
         child: const Icon(Icons.add),
       ),
-
-      // Body
       body: StreamBuilder(
         stream: databaseService.stream,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return const Center(child: Text("There are no todos"));
+            return const Center(child: Text("There are have no data"));
           }
-          final todos = snapshot.data!;
+
+          final List<Todo> todos = snapshot.data!;
+
           return ListView.builder(
             itemCount: todos.length,
             itemBuilder: (context, index) {
